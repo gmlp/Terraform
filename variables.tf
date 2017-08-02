@@ -12,6 +12,8 @@ variable "allow_ssh_access" {
 
 variable "vpc_cidr" { default = "10.0.0.0/16" }
 
+variable "public_subnet" { default ="public" }
+
 variable "subnet_cidrs" {
     description = "CIDR block for public and private subnets"
     default = {
