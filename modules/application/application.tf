@@ -29,11 +29,28 @@ resource "aws_security_group" "allow_http" {
 #     owners = ["self"]
 # }
 
+resource "random_id" "hostname" {
+    keepers {
+        ami_id = "ami-835b4efa"
+    }
+    byte_length = 4
+}
+
+resource "random_shuffle" "hostname_creature" {
+    input = ["griffin", "gargoyle", "dragon"]
+    result_count = 1
+}
+
+resource "random_id" "hostname_random" {
+    byte_length = 4
+}
+
 data "template_file" "user_data" {
     template = "${file("${path.module}/user_data.sh.tpl")}"
     vars {
         packages = "${var.extra_packages}"
         nameserver = "${var.external_nameserver}"
+        hostname = "${random_shuffle.hostname_creature.result[0]}${random_id.hostname.b64}"
     }
 }
 

@@ -6,6 +6,15 @@ data "aws_vpc" "management_layer" {
     id = "vpc-d2f354b4"
 }
 
+data "external" "example" {
+    program = ["ruby", "${path.module}/custom_data_source.rb"]
+}
+
+resource "tls_private_key" "example" { 
+    algorithm = "ECDSA" 
+    ecdsa_curve = "P384" 
+} 
+
 resource "aws_vpc" "my_vpc" {
   cidr_block = "${var.vpc_cidr}"
 }
@@ -50,7 +59,7 @@ module "mighty_trousers" {
   source    = "./modules/application"
   vpc_id    = "${aws_vpc.my_vpc.id}"
   subnet_id = "${aws_subnet.public.id}"
-  name      = "MightyTrousers"
+  name      = "MightyTrousers-${data.external.example.result.owner}"
   environment = "${var.environment}"
   extra_sgs = ["${aws_security_group.default.id}"]
   extra_packages = "${lookup(var.extra_packages,"MightyTrousers")}"
