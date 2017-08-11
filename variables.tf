@@ -12,8 +12,6 @@ variable "allow_ssh_access" {
 
 variable "vpc_cidr" { default = "10.0.0.0/16" }
 
-variable "public_subnet" { default ="public" }
-
 variable "subnet_cidrs" {
     description = "CIDR block for public and private subnets"
     default = {
@@ -21,3 +19,12 @@ variable "subnet_cidrs" {
         private = "10.0.2.0/24"
     }
 }
+variable "external_nameserver" { default = "8.8.8.8" }
+variable "extra_packages" {
+    description = "Additional packages to install for particular module"
+    default = {
+        base = "wget"
+        MightyTrousers = "wget bind-utils"
+    }
+}
+

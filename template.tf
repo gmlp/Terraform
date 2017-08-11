@@ -18,7 +18,7 @@ resource "aws_vpc_peering_connection" "my_vpc-management" {
 
 resource "aws_subnet" "public" {
   vpc_id     = "${aws_vpc.my_vpc.id}"
-  cidr_block = "${lookup(var.subnet_cidrs, var.public_subnet)}"
+  cidr_block = "${lookup(var.subnet_cidrs, "public")}"
 }
 
 resource "aws_security_group" "default" {
@@ -34,6 +34,17 @@ resource "aws_security_group" "default" {
     }
 }
 
+resource "aws_key_pair" "terraform" {
+    key_name = "terraform"
+    public_key = "${file("~/.ssh/id_rsa.pub")}"
+}
+
+#resource "aws_ami_role_policy" "s3-assets-all" {
+#    name = "s3=assets@all"
+#    role = "${aws_ami_role.app-production.id}"
+#    policy =  "${file("policies/s3=assets@all.json")}"
+#}
+
 
 module "mighty_trousers" {
   source    = "./modules/application"
@@ -42,6 +53,8 @@ module "mighty_trousers" {
   name      = "MightyTrousers"
   environment = "${var.environment}"
   extra_sgs = ["${aws_security_group.default.id}"]
+  extra_packages = "${lookup(var.extra_packages,"MightyTrousers")}"
+  external_nameserver = "${var.external_nameserver}"
 }
 
 output "hostname" {
