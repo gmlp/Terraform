@@ -74,6 +74,7 @@ resource "aws_instance" "app-server" {
   subnet_id              = "${var.subnet_id}"
   vpc_security_group_ids = ["${distinct(concat(var.extra_sgs, aws_security_group.allow_http.*.id))}"]
   user_data = "${data.template_file.user_data.rendered}"
+  key_name = "${var.keypair}"
   tags {
     Name = "${var.name}"
   }
@@ -84,4 +85,7 @@ resource "aws_instance" "app-server" {
 
 output "hostname" {
   value = "${aws_instance.app-server.private_dns}"
+}
+output "public_ip" {
+    value = "${aws_instance.app-server.public_ip}"
 }
