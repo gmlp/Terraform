@@ -53,10 +53,23 @@ data "template_file" "user_data" {
         hostname = "${random_shuffle.hostname_creature.result[0]}${random_id.hostname.b64}"
     }
 }
+# Providing AMI through consul
+#provider "consul" { 
+#    address = "consul.example.com:80" 
+#    datacenter = "frankfurt" 
+#} 
+#data "consul_keys" "amis" { 
+#    # Read the launch AMI from Consul 
+#    key { 
+#        name = "mighty_trousers" 
+#        path = "ami" 
+#    } 
+#} 
 
 resource "aws_instance" "app-server" {
   ami                    = "ami-835b4efa"
 #  ami                    = "${data.aws_ami.app-ami.id}"
+#  ami = "${consul_keys.amis.var.mighty_trousers}"
   instance_type          = "${lookup(var.instance_type, var.environment)}"
   subnet_id              = "${var.subnet_id}"
   vpc_security_group_ids = ["${distinct(concat(var.extra_sgs, aws_security_group.allow_http.*.id))}"]
