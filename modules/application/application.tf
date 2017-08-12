@@ -1,9 +1,3 @@
-variable "vpc_id" {}
-
-variable "subnet_id" {}
-
-variable "name" {}
-
 resource "aws_security_group" "allow_http" {
   name        = "${var.name} allow_http"
   description = "Allow HTTP traffic"
@@ -76,7 +70,7 @@ resource "aws_instance" "app-server" {
   #  ami = "${consul_keys.amis.var.mighty_trousers}"
   instance_type = "${lookup(var.instance_type, var.environment)}"
 
-  subnet_id              = "${var.subnet_id}"
+  subnet_id              = "${element(var.subnets, count.index%2)}"
   vpc_security_group_ids = ["${distinct(concat(var.extra_sgs, aws_security_group.allow_http.*.id))}"]
   user_data              = "${data.template_file.user_data.rendered}"
   key_name               = "${var.keypair}"
@@ -92,6 +86,7 @@ resource "aws_instance" "app-server" {
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update",
+      "sudo apt-get install -y python",
       "sudo apt-get install -y puppet",
     ]
   }
@@ -103,16 +98,18 @@ resource "aws_instance" "app-server" {
   lifecycle {
     ignore_changes = ["user_data"]
   }
+
+  count = "${var.instance_count}"
 }
 
 resource "null_resource" "app_server_provisioner" {
   triggers {
-    server_id = "${aws_instance.app-server.id}"
+    server_id = "${element(aws_instance.app-server.*.public_ip, count.index)}"
   }
 
   connection {
     user = "ubuntu"
-    host = "${aws_instance.app-server.public_ip}"
+    host = "${element(aws_instance.app-server.*.public_ip, count.index)}"
   }
 
   provisioner "file" {
@@ -125,6 +122,32 @@ resource "null_resource" "app_server_provisioner" {
       "sudo puppet apply /tmp/setup.pp",
     ]
   }
+
+  count = "${var.instance_count}"
+}
+
+resource "aws_elb" "load-balancer" {
+  name            = "application-load-balancer"
+  subnets         = ["${var.subnets}"]
+  security_groups = ["${aws_security_group.allow_http.id}"]
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "TCP:80"
+    interval            = 30
+  }
+
+  instances = ["${aws_instance.app-server.*.id}"]
+  count     = "${var.instance_count > 1 ? 1 : 0}"
 }
 
 output "hostname" {
@@ -132,5 +155,9 @@ output "hostname" {
 }
 
 output "public_ip" {
-  value = "${aws_instance.app-server.public_ip}"
+  value = "${join(",", aws_instance.app-server.*.public_ip)}"
+}
+
+output "app_address" {
+  value = "${aws_elb.load-balancer.dns_name}"
 }

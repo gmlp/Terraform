@@ -25,9 +25,17 @@ resource "aws_vpc_peering_connection" "my_vpc-management" {
   auto_accept = true
 }
 
-resource "aws_subnet" "public" {
+resource "aws_subnet" "public-1" {
   vpc_id                  = "${aws_vpc.my_vpc.id}"
-  cidr_block              = "${lookup(var.subnet_cidrs, "public")}"
+  availability_zone       = "us-west-2a"
+  cidr_block              = "${lookup(var.subnet_cidrs, "us-west-2a-public")}"
+  map_public_ip_on_launch = true
+}
+
+resource "aws_subnet" "public-2" {
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  availability_zone       = "us-west-2b"
+  cidr_block              = "${lookup(var.subnet_cidrs, "us-west-2b-public")}"
   map_public_ip_on_launch = true
 }
 
@@ -73,19 +81,20 @@ resource "aws_default_route_table" "default_routing" {
 module "mighty_trousers" {
   source              = "./modules/application"
   vpc_id              = "${aws_vpc.my_vpc.id}"
-  subnet_id           = "${aws_subnet.public.id}"
+  subnets             = ["${aws_subnet.public-1.id}", "${aws_subnet.public-2.id}"]
   name                = "MightyTrousers-${data.external.example.result.owner}"
   keypair             = "${aws_key_pair.terraform.key_name}"
   environment         = "${var.environment}"
   extra_sgs           = ["${aws_security_group.default.id}"]
   extra_packages      = "${lookup(var.extra_packages,"MightyTrousers")}"
   external_nameserver = "${var.external_nameserver}"
+  instance_count      = 2
 }
 
 output "hostname" {
   value = "${module.mighty_trousers.hostname}"
 }
 
-output "mighty_trousers_public_ip" {
-  value = "${module.mighty_trousers.public_ip}"
+output "mighty_trousers_app_address" {
+  value = "${module.mighty_trousers.app_address}"
 }

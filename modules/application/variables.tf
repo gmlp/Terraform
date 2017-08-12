@@ -1,3 +1,7 @@
+variable "vpc_id" {}
+
+variable "name" {}
+
 variable "environment" {
   default = "dev"
 }
@@ -21,3 +25,11 @@ variable "extra_packages" {}
 variable "external_nameserver" {}
 
 variable "keypair" {}
+
+variable "instance_count" {
+  default = 0
+}
+
+variable "subnets" {
+  type = "list"
+}
