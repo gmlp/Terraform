@@ -12,7 +12,12 @@ variable "instance_type" {
   }
 }
 
-variable "extra_sgs" { default = [] }
+variable "extra_sgs" {
+  default = []
+}
+
 variable "extra_packages" {}
+
 variable "external_nameserver" {}
+
 variable "keypair" {}

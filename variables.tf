@@ -3,28 +3,37 @@ variable "region" {
   default     = "us-west-2"
 }
 
-variable "environment" { default = "prod" }
+variable "environment" {
+  default = "prod"
+}
 
 variable "allow_ssh_access" {
-    description = "List of CIDR blocks that can access instances via SSH"
-    default = ["0.0.0.0/0"]
+  description = "List of CIDR blocks that can access instances via SSH"
+  default     = ["0.0.0.0/0"]
 }
 
-variable "vpc_cidr" { default = "10.0.0.0/16" }
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
+}
 
 variable "subnet_cidrs" {
-    description = "CIDR block for public and private subnets"
-    default = {
-        public = "10.0.1.0/24"
-        private = "10.0.2.0/24"
-    }
-}
-variable "external_nameserver" { default = "8.8.8.8" }
-variable "extra_packages" {
-    description = "Additional packages to install for particular module"
-    default = {
-        base = "wget"
-        MightyTrousers = "wget bind-utils"
-    }
+  description = "CIDR block for public and private subnets"
+
+  default = {
+    public  = "10.0.1.0/24"
+    private = "10.0.2.0/24"
+  }
 }
 
+variable "external_nameserver" {
+  default = "8.8.8.8"
+}
+
+variable "extra_packages" {
+  description = "Additional packages to install for particular module"
+
+  default = {
+    base           = "wget"
+    MightyTrousers = "wget bind-utils"
+  }
+}
