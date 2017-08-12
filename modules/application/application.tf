@@ -89,16 +89,10 @@ resource "aws_instance" "app-server" {
     agent = true
   }
 
-  provisioner "file" {
-    source      = "${path.module}/setup.pp"
-    destination = "/tmp/setup.pp"
-  }
-
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update",
       "sudo apt-get install -y puppet",
-      "sudo puppet apply /tmp/setup.pp",
     ]
   }
 
@@ -108,6 +102,28 @@ resource "aws_instance" "app-server" {
 
   lifecycle {
     ignore_changes = ["user_data"]
+  }
+}
+
+resource "null_resource" "app_server_provisioner" {
+  triggers {
+    server_id = "${aws_instance.app-server.id}"
+  }
+
+  connection {
+    user = "ubuntu"
+    host = "${aws_instance.app-server.public_ip}"
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/setup.pp"
+    destination = "/tmp/setup.pp"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo puppet apply /tmp/setup.pp",
+    ]
   }
 }
 
