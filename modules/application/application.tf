@@ -18,10 +18,15 @@ resource "aws_security_group" "allow_http" {
   }
 }
 
-# data "aws_ami" "app-ami" {
-#     most_recent = true
-#     owners = ["self"]
-# }
+data "aws_ami" "app-ami" {
+  most_recent = true
+  owners      = ["self"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu-16-base-puppet*"]
+  }
+}
 
 resource "random_id" "hostname" {
   keepers {
@@ -64,9 +69,9 @@ data "template_file" "user_data" {
 #} 
 
 resource "aws_instance" "app-server" {
-  ami = "ami-835b4efa"
+  #ami = "ami-835b4efa"
+  ami = "${data.aws_ami.app-ami.id}"
 
-  #  ami                    = "${data.aws_ami.app-ami.id}"
   #  ami = "${consul_keys.amis.var.mighty_trousers}"
   instance_type = "${lookup(var.instance_type, var.environment)}"
 
@@ -75,28 +80,13 @@ resource "aws_instance" "app-server" {
   user_data              = "${data.template_file.user_data.rendered}"
   key_name               = "${var.keypair}"
 
-  #  provisioner "local-exec" {
-  #    command = "echo ${self.public_ip} >> inventory"
-  #  }
-  connection {
-    user  = "ubuntu"
-    agent = true
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y python",
-      "sudo apt-get install -y puppet",
-    ]
-  }
-
   tags {
     Name = "${var.name}"
   }
 
   lifecycle {
-    ignore_changes = ["user_data"]
+    create_before_destroy = true
+    ignore_changes        = ["user_data"]
   }
 
   count = "${var.instance_count}"
