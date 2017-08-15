@@ -1,0 +1,23 @@
+{
+    "builders": [
+        {
+            "type": "amazon-ebs",
+            "ami_name": "ubuntu-16-base-puppet-{{timestamp}}",
+            "region": "us-west-2",
+            "source_ami": "ami-835b4efa",
+            "instance_type": "t2.micro",
+            "ssh_username": "ubuntu",
+            "ssh_pty": true
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "sudo apt-get update",
+                "sudo apt-get install -y puppet",
+                "sudo apt-get install -y python"
+            ]
+        }
+    ]
+}
